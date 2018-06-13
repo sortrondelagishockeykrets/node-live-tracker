@@ -9,9 +9,11 @@ var secret = process.env.SECRET || 'Dette er havveis hemmelig, men det er ikke s
 var PORT = process.env.PORT || 80;
 
 app.get('/stats/info.json', function(req, res){
-	var resultJson = JSON.parse(JSON.stringify(uniqueUsers));
-	resultJson["current_timestamp"] = timestamp();
-  res.json(resultJson);
+	var resultJson = {
+		"current_timestamp": timestamp(),
+		"connected": uniqueUsers
+	}
+	res.json(resultJson);
 });
 
 app.get('*', function(req, res){
@@ -57,7 +59,7 @@ function tryBeta(socket) {
 }
 
 io.sockets.on('connection', function (socket) {
-	var ip = socket.request.headers['x-forwarded-for']; //socket.request.connection.remoteAddress;
+	var ip = socket.request.headers['x-forwarded-for'] || socket.request.connection.remoteAddress;
 	ip = crypto.createHmac('sha256', secret).update(ip).digest('hex');
 	
 	//Creates a temperary record of visitors ipaddress
