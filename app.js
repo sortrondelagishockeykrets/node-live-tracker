@@ -7,6 +7,8 @@ var	app = require('express')(),
 var uniqueUsers = {};
 var secret = process.env.SECRET || 'Dette er havveis hemmelig, men det er ikke så farlig. Er bare så folk ikke kan se ip adressene til de som er på siden.';
 var PORT = process.env.PORT || 80;
+var HOSTNAME = process.env.HOSTNAME || 'localhost';
+var passcode = process.env.passcode || '123456789';
 
 app.get('/stats/info.json', function(req, res){
 	var resultJson = {
@@ -22,7 +24,7 @@ app.get('*', function(req, res){
 });
 
 http.listen(PORT, function(){
-	console.log('Started listening on ' + process.env.hostname + ':' + PORT);
+	console.log('Started listening on ' + HOSTNAME + ':' + PORT);
 });
 
 function get(url) {
@@ -73,24 +75,27 @@ io.sockets.on('connection', function (socket) {
 	updateOnlineUsers();
 
 	socket.on('notification', function(data) {
-		if(data.passcode == "123456789") {
+		if(data.passcode == passcode) {
 			data.passcode = "*********";
 			io.emit('notification', data);
 		}
 	});
 
 	socket.on('update', function(data) {
-		request(data.url, function (error, response, body) {
-  			if (!error && response.statusCode == 200) {
-    				var newdata = {
-                      func: data.func,
-                      source: body
-                		};
-            io.emit('update', newdata);
- 			 } else {
-				io.emit('update', {func: 'error', source: error});
-			 }
-		});
+		if(data.passcode == passcode) {
+			data.passcode = "*********";
+			request(data.url, function (error, response, body) {
+				if (!error && response.statusCode == 200) {
+					var newdata = {
+			      			func: data.func,
+			      			source: body
+					};
+		    			io.emit('update', newdata);
+				 } else {
+					io.emit('update', {func: 'error', source: error});
+				 }
+			});
+		}
 	});
 
 	socket.on('disconnect', function(data) {
