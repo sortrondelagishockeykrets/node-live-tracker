@@ -80,6 +80,16 @@ io.sockets.on('connection', function (socket) {
 			io.emit('notification', data);
 		}
 	});
+	
+	socket.on('sendAll', function(data) {
+		if(data.passcode == passcode) {
+			var resultJson = {
+				"current_timestamp": timestamp(),
+				"connected": uniqueUsers
+			}
+			socket.emit('getAll', resultJson);
+		}
+	});
 
 	socket.on('update', function(data) {
 		if(data.passcode == passcode) {
